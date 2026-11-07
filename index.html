@@ -12,11 +12,11 @@
 html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
 .app{display:grid;grid-template-columns:340px 1fr;height:100%;max-width:1100px;margin:0 auto;background:var(--panel)}
 .side{display:flex;flex-direction:column;border-right:1px solid var(--line);min-height:0}
-.top{padding:14px 16px 8px;font-weight:700;font-size:20px}
-.tabs{display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto}.tab{white-space:nowrap}
+.top{padding:14px 16px 8px;font-weight:700;font-size:20px;flex:none}
+.tabs{display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto;flex:none}.tab{white-space:nowrap}
 .tab{border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:16px;font-size:13px;cursor:pointer}
 .tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.list{overflow-y:auto;flex:1}
+.list{overflow-y:auto;flex:1;min-height:0}
 .row{display:flex;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--line)}
 .row:hover,.row.on{background:var(--bg)}
 .av{position:relative;width:44px;height:44px;border-radius:50%;background:#8a9ba8;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none}
@@ -52,6 +52,8 @@ html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Ro
   <div class="chat" id="chat"></div>
 </div>
 <script>
+function err(m){var d=document.getElementById("errbar");if(!d){d=document.createElement("div");d.id="errbar";d.style.cssText="position:fixed;left:0;right:0;bottom:0;background:#b3261e;color:#fff;font-size:12px;padding:6px 10px;z-index:9";document.body.appendChild(d)}d.textContent=String(m)}
+window.onerror=function(m){err(m)};
 var T=function(h,m){return h+":"+(m<10?"0":"")+m};
 var C=[
 {id:1,n:"Arun",s:"wa",u:2,m:[["in","Da, evening free ah?","9:41"],["in","Cricket poganum","9:42"]]},
@@ -84,14 +86,14 @@ setTimeout(function(){msg[3]="\u2713\u2713";if(cur==c.id)draw()},700);
 setTimeout(function(){var d2=new Date();c.m.push(["in","(demo) "+NAME[c.s]+" la reply vandhuchu","\u2009"+T(d2.getHours(),d2.getMinutes())]);if(cur!=c.id)c.u++;else draw();list()},1800);
 document.getElementById("in").focus()}
 document.getElementById("sd").onclick=send;inp.onkeydown=function(e){if(e.key=="Enter")send()}}
-var Sms=(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())?Capacitor.registerPlugin("Sms"):null;
+var Sms=null;
 function hm(ms){var d=new Date(ms);return T(d.getHours(),d.getMinutes())}
-async function loadSms(){if(!Sms)return;try{await Sms.requestPermissions();var r=await Sms.getInbox({limit:500}),g={};
+async function loadSms(){try{if(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())Sms=Capacitor.registerPlugin("Sms");if(!Sms)return;await Sms.requestPermissions();var r=await Sms.getInbox({limit:500}),g={};
 r.messages.sort(function(a,b){return a.date-b.date}).forEach(function(x){(g[x.address]=g[x.address]||[]).push([x.type==1?"in":"out",x.body,hm(x.date)])});
-C=C.filter(function(c){return c.s!="sms"});var i=1000;Object.keys(g).forEach(function(a){C.push({id:i++,n:a,addr:a,s:"sms",u:0,m:g[a]})});list()}catch(e){}}
+C=C.filter(function(c){return c.s!="sms"});var i=1000;Object.keys(g).forEach(function(a){C.push({id:i++,n:a,addr:a,s:"sms",u:0,m:g[a]})});list()}catch(e){err("SMS: "+(e&&e.message?e.message:e))}}
 function nativeSend(c,v){var msg=["out",v,hm(Date.now()),"\u2713"];c.m.push(msg);draw();list();Sms.send({to:c.addr,body:v}).then(function(){msg[3]="\u2713\u2713";draw()}).catch(function(){msg[3]="failed";draw()})}
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&cur==null)loadSms()});
-tabs();list();draw();loadSms();
+try{tabs();list();draw()}catch(e){err("UI: "+e.message)}loadSms();
 </script>
 </body>
 </html>
