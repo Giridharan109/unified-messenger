@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unified Messenger</title>
+<style>
+:root{--bg:#f0f2f5;--panel:#fff;--text:#111b21;--muted:#667781;--line:#e4e6e8;--in:#fff;--out:#d9fdd3;--wa:#25d366;--tg:#2aabee;--accent:#0b8f6a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b141a;--panel:#111b21;--text:#e9edef;--muted:#8696a0;--line:#222d34;--in:#202c33;--out:#005c4b}}
+:root[data-theme="dark"]{--bg:#0b141a;--panel:#111b21;--text:#e9edef;--muted:#8696a0;--line:#222d34;--in:#202c33;--out:#005c4b}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+.app{display:grid;grid-template-columns:340px 1fr;height:100%;max-width:1100px;margin:0 auto;background:var(--panel)}
+.side{display:flex;flex-direction:column;border-right:1px solid var(--line);min-height:0}
+.top{padding:14px 16px 8px;font-weight:700;font-size:20px}
+.tabs{display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto}.tab{white-space:nowrap}
+.tab{border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:16px;font-size:13px;cursor:pointer}
+.tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.list{overflow-y:auto;flex:1}
+.row{display:flex;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--line)}
+.row:hover,.row.on{background:var(--bg)}
+.av{position:relative;width:44px;height:44px;border-radius:50%;background:#8a9ba8;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none}
+.badge{position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;border-radius:50%;border:2px solid var(--panel);font-size:0}
+.wa{background:var(--wa)}.tg{background:var(--tg)}.sms{background:#f5a623}.ig{background:linear-gradient(45deg,#f9a825,#e1306c,#833ab4)}
+.meta{min-width:0;flex:1}
+.nm{display:flex;justify-content:space-between;font-weight:600}
+.nm span{font-size:12px;color:var(--muted);font-weight:400}
+.pv{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;justify-content:space-between;gap:8px}
+.un{background:var(--accent);color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;flex:none}
+.chat{display:flex;flex-direction:column;min-height:0;background:var(--bg)}
+.ch{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.back{display:none;border:0;background:none;color:var(--text);font-size:22px;cursor:pointer}
+.src{font-size:12px;color:var(--muted)}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px}
+.b{max-width:75%;padding:7px 10px;border-radius:10px;background:var(--in);font-size:15px;line-height:1.35;box-shadow:0 1px 1px rgba(0,0,0,.08);word-wrap:break-word}
+.b.out{align-self:flex-end;background:var(--out)}
+.b small{display:block;text-align:right;font-size:11px;color:var(--muted);margin-top:2px}
+.empty{margin:auto;color:var(--muted);text-align:center;padding:24px}
+.bar{display:flex;gap:8px;padding:10px;background:var(--panel);border-top:1px solid var(--line)}
+.bar input{flex:1;padding:11px 14px;border-radius:22px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:15px;outline:none}
+.bar button{border:0;border-radius:50%;width:44px;height:44px;background:var(--accent);color:#fff;font-size:18px;cursor:pointer}
+@media (max-width:700px){.app{grid-template-columns:1fr}.chat{display:none}.app.open .side{display:none}.app.open .chat{display:flex}.back{display:block}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="side">
+    <div class="top">Messages</div>
+    <div class="tabs" id="tabs"></div>
+    <div class="list" id="list"></div>
+  </div>
+  <div class="chat" id="chat"></div>
+</div>
+<script>
+var T=function(h,m){return h+":"+(m<10?"0":"")+m};
+var C=[
+{id:1,n:"Arun",s:"wa",u:2,m:[["in","Da, evening free ah?","9:41"],["in","Cricket poganum","9:42"]]},
+{id:2,n:"Amma",s:"wa",u:0,m:[["in","Saapteya?","8:10"],["out","Saapten ma","8:12"]]},
+{id:3,n:"Dev Team",s:"tg",u:5,m:[["in","Build passed","10:02"],["in","Deploy pannalama?","10:03"]]},
+{id:4,n:"Priya",s:"tg",u:1,m:[["in","Notes anuppu da","7:55"]]},
+{id:5,n:"Karthik",s:"wa",u:0,m:[["in","Thanks bro","Yesterday"]]},
+{id:6,n:"HDFC Bank",s:"sms",u:1,m:[["in","Your OTP is 482913","11:20"]]},
+{id:7,n:"Divya",s:"sms",u:0,m:[["in","Call me when free","Yesterday"]]},
+{id:8,n:"Meera",s:"ig",u:3,m:[["in","Reel pathiya?","12:05"],["in","Semma illa","12:06"]]}
+];
+var f="all",cur=null,L=function(x){return x.m[x.m.length-1]};
+var NAME={wa:"WhatsApp",tg:"Telegram",sms:"SMS",ig:"Instagram"};
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function tabs(){var h="";[["all","All"],["wa","WhatsApp"],["tg","Telegram"],["sms","SMS"],["ig","Instagram"]].forEach(function(t){h+='<button class="tab'+(f==t[0]?" on":"")+'" data-f="'+t[0]+'">'+t[1]+'</button>'});
+var e=document.getElementById("tabs");e.innerHTML=h;e.onclick=function(ev){var k=ev.target.dataset.f;if(k){f=k;tabs();list()}}}
+function list(){var h="";C.filter(function(c){return f=="all"||c.s==f}).forEach(function(c){var l=L(c);
+h+='<div class="row'+(cur==c.id?" on":"")+'" data-id="'+c.id+'"><div class="av">'+c.n[0]+'<i class="badge '+c.s+'"></i></div><div class="meta"><div class="nm">'+esc(c.n)+'<span>'+l[2]+'</span></div><div class="pv"><span>'+(l[0]=="out"?"You: ":"")+esc(l[1])+'</span>'+(c.u?'<b class="un">'+c.u+'</b>':"")+'</div></div></div>'});
+var e=document.getElementById("list");e.innerHTML=h;e.onclick=function(ev){var r=ev.target.closest(".row");if(r)open(+r.dataset.id)}}
+function open(id){cur=id;var c=C.find(function(x){return x.id==id});c.u=0;document.getElementById("app").classList.add("open");draw();list()}
+function draw(){var el=document.getElementById("chat");
+if(cur==null){el.innerHTML='<div class="empty">Oru chat select pannunga</div>';return}
+var c=C.find(function(x){return x.id==cur}),h='<div class="ch"><button class="back" id="bk">\u2190</button><div class="av">'+c.n[0]+'<i class="badge '+c.s+'"></i></div><div><b>'+esc(c.n)+'</b><div class="src">via '+NAME[c.s]+'</div></div></div><div class="msgs" id="ms">';
+c.m.forEach(function(m){h+='<div class="b '+m[0]+'">'+esc(m[1])+'<small>'+m[2]+(m[3]?" "+m[3]:"")+'</small></div>'});
+h+='</div><div class="bar"><input id="in" placeholder="Reply via '+NAME[c.s]+'..." autocomplete="off"><button id="sd" aria-label="Send">\u27A4</button></div>';
+el.innerHTML=h;var ms=document.getElementById("ms");ms.scrollTop=ms.scrollHeight;
+document.getElementById("bk").onclick=function(){document.getElementById("app").classList.remove("open");cur=null;list();draw()};
+var inp=document.getElementById("in");function send(){var v=inp.value.trim();if(!v)return;if(c.addr&&Sms){nativeSend(c,v);return}var d=new Date(),t=T(d.getHours(),d.getMinutes()),msg=["out",v,t,"\u2713"];c.m.push(msg);draw();list();
+setTimeout(function(){msg[3]="\u2713\u2713";if(cur==c.id)draw()},700);
+setTimeout(function(){var d2=new Date();c.m.push(["in","(demo) "+NAME[c.s]+" la reply vandhuchu","\u2009"+T(d2.getHours(),d2.getMinutes())]);if(cur!=c.id)c.u++;else draw();list()},1800);
+document.getElementById("in").focus()}
+document.getElementById("sd").onclick=send;inp.onkeydown=function(e){if(e.key=="Enter")send()}}
+var Sms=(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())?Capacitor.registerPlugin("Sms"):null;
+function hm(ms){var d=new Date(ms);return T(d.getHours(),d.getMinutes())}
+async function loadSms(){if(!Sms)return;try{await Sms.requestPermissions();var r=await Sms.getInbox({limit:500}),g={};
+r.messages.sort(function(a,b){return a.date-b.date}).forEach(function(x){(g[x.address]=g[x.address]||[]).push([x.type==1?"in":"out",x.body,hm(x.date)])});
+C=C.filter(function(c){return c.s!="sms"});var i=1000;Object.keys(g).forEach(function(a){C.push({id:i++,n:a,addr:a,s:"sms",u:0,m:g[a]})});list()}catch(e){}}
+function nativeSend(c,v){var msg=["out",v,hm(Date.now()),"\u2713"];c.m.push(msg);draw();list();Sms.send({to:c.addr,body:v}).then(function(){msg[3]="\u2713\u2713";draw()}).catch(function(){msg[3]="failed";draw()})}
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&cur==null)loadSms()});
+tabs();list();draw();loadSms();
+</script>
+</body>
+</html>
